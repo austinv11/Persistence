@@ -3,6 +3,7 @@ package com.austinv11.persistence.internal
 import com.austinv11.persistence.ConnectionSpy
 import com.austinv11.persistence.OpCode
 import com.austinv11.persistence.PersistenceManager
+import com.austinv11.persistence.impl.ConnectionImpl
 import com.austinv11.persistence.impl.NoOpConnectionSpy
 import com.austinv11.persistence.mask_int
 import kotlinx.coroutines.experimental.CommonPool
@@ -35,7 +36,7 @@ class TwoWaySocket {
         launch(newSingleThreadContext("Connection Waiter")) { 
             while(connections.size < allowedConnections) {
                 val socket = server.accept()
-                connections += CommunicationManager(socket, SocketHook(this@TwoWaySocket, spy))
+                connections += CommunicationManager(socket, SocketHook(this@TwoWaySocket, spy), socket.inetAddress.hostName, socket.port)
             }
             yield()
         }
@@ -43,17 +44,20 @@ class TwoWaySocket {
 
     suspend fun connectTo(host: String, port: Int, metadata: Map<String, Any?>? = null) {
         val socket = Socket(host, port)
-        val manager = CommunicationManager(socket, SocketHook(this, spy))
+        val manager = CommunicationManager(socket, SocketHook(this, spy), host, port)
         manager.send(Payload.Identify(context.version, d = metadata))
         connections += manager
     }
     
     inner class CommunicationManager(val socket: Socket, 
                                      val hook: Hook,
+                                     val host: String,
+                                     val port: Int,
                                      val manager: PersistenceManager = context) : AutoCloseable {
 
         val input = socket.getInputStream()!!
         val output = socket.getOutputStream()!!
+        val connection = ConnectionImpl(this)
         
         init {
             hook.hook(this)

@@ -23,7 +23,7 @@ class PersistenceManager {
     internal val stores: MutableMap<Class<*>, Store<*>> = ConcurrentHashMap()
     internal val customDataTransformers: MutableList<ExternalData<in Any>> = CopyOnWriteArrayList()
     @Volatile internal var factory: StoreFactory = DefaultFactory()
-    @Volatile internal var explicitPropertiesOnly = false
+//    @Volatile internal var explicitPropertiesOnly = false
     @Volatile internal var deepPersistence = false
     @Volatile internal var version: Int? = null 
     @Volatile internal var port = 6000
@@ -131,18 +131,18 @@ class PersistenceManager {
         }
     }
 
-    /**
-     * This sets whether properties getters and setters must be annotated with [Getter] and [Setter]. If
-     * this is not set to true (the default), heuristic analysis will be employed to attempt to find eligible
-     * properties.
-     *
-     * @param explicitPropertiesOnly Set this to true to not employ heuristics when detecting properties.
-     * @return The same manager for chaining methods.
-     */
-    fun setExplicitPropertiesOnly(explicitPropertiesOnly: Boolean): PersistenceManager {
-        this.explicitPropertiesOnly = explicitPropertiesOnly
-        return this
-    }
+//    /**
+//     * This sets whether properties getters and setters must be annotated with [Getter] and [Setter]. If
+//     * this is not set to true (the default), heuristic analysis will be employed to attempt to find eligible
+//     * properties.
+//     *
+//     * @param explicitPropertiesOnly Set this to true to not employ heuristics when detecting properties.
+//     * @return The same manager for chaining methods.
+//     */
+//    fun setExplicitPropertiesOnly(explicitPropertiesOnly: Boolean): PersistenceManager {
+//        this.explicitPropertiesOnly = explicitPropertiesOnly
+//        return this
+//    }
 
     /**
      * This sets whether nested objects are also persisted. This can hurt performance and lead to weird bugs so this is
@@ -210,6 +210,13 @@ class PersistenceManager {
             }
             stores.clear()
         }
+    }
+
+    /**
+     * This gets the currently active connections.
+     */
+    fun getConnections(): List<Connection> {
+        return socket.connections.map { it.connection }
     }
     
     internal fun Any.findInterfaces(): Array<Class<*>> = this.javaClass.interfaces

@@ -2,6 +2,7 @@ package com.austinv11.persistence.internal
 
 import com.austinv11.persistence.ConnectionSpy
 import com.austinv11.persistence.Store
+import com.austinv11.persistence.impl.ConnectionImpl
 import com.austinv11.persistence.internal.TwoWaySocket.Hook
 import com.austinv11.persistence.matchProperties
 import kotlinx.coroutines.experimental.runBlocking
@@ -10,6 +11,9 @@ internal class SocketHook(override val socket: TwoWaySocket,
                           val spy: ConnectionSpy) : Hook {
     
     private lateinit var manager: TwoWaySocket.CommunicationManager
+    private val connection: ConnectionImpl by lazy { 
+        manager.connection
+    }
     
     override fun hook(manager: TwoWaySocket.CommunicationManager) {
         this.manager = manager
@@ -32,11 +36,19 @@ internal class SocketHook(override val socket: TwoWaySocket,
     }
 
     override fun pinged(payload: Payload.Ping) {
-        spy.latencyCheck(System.currentTimeMillis() - payload.t)
+        val time = System.currentTimeMillis()
+        val latency = time - payload.t
+        spy.latencyCheck(latency)
+        connection.lastPingTime = time
+        connection.lastPing = latency
     }
 
     override fun ponged(payload: Payload.Pong) {
-        spy.latencyCheck(System.currentTimeMillis() - payload.t)
+        val time = System.currentTimeMillis()
+        val latency = time - payload.t
+        spy.latencyCheck(latency)
+        connection.lastPingTime = time
+        connection.lastPing = latency
     }
 
     override fun kicked(payload: Payload.Kick) {
