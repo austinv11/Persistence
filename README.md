@@ -23,6 +23,48 @@ obj.setName("Hello world"); //This change will now be reflected accross all node
 ((Persisted) obj).unpersist(); //This unpersists the object (and yeah, it now magically implements Persisted).
 ```
 
+## Adding this as a dependency
+Given that `@VERSION@` = the version of Persistence (this can either be a release version, the short commit hash or `master-SNAPSHOT`).
+### With Maven
+In your `pom.xml` add:
+```xml
+<repositories>
+  <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+    <groupId>com.github.austinv11</groupId>
+    <artifactId>Persistence</artifactId>
+    <version>@VERSION@</version>
+  </dependency>
+</dependencies>
+```
+### With Gradle
+In your `build.gradle` add: 
+```groovy
+repositories {
+  maven {
+    url  "https://jitpack.io"
+  }
+}
+dependencies {
+  compile "com.github.austinv11:Persistence:@VERSION@"
+}
+```
+### With SBT
+In your `build.sbt` add (without the ellipses):
+```sbt
+libraryDependencies ++= Seq(
+  "com.github.austinv11" % "Persistence" % "@VERSION@"
+)
+
+resolvers += "jitpack.io" at "https://jitpack.io"
+```
+
 ## Important caveats in the Java API
 **Note:** These can be circumvented by using an object's Store object directly, retrieved via 
 `PersistenceManager#storeFor`.
