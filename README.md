@@ -56,7 +56,7 @@ dependencies {
 }
 ```
 ### With SBT
-In your `build.sbt` add (without the ellipses):
+In your `build.sbt`:
 ```sbt
 libraryDependencies ++= Seq(
   "com.github.austinv11" % "Persistence" % "@VERSION@"
