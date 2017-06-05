@@ -78,4 +78,4 @@ whereby they can only intercept method calls to *interfaces*.
 * Provide an annotation processing api in addition to proxies.
 * Implement authentication and input validation.
 * Migrate from TCP to a more robust protocol. 
-
+* Compress sent data
