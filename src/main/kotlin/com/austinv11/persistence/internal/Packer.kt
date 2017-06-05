@@ -3,6 +3,7 @@ package com.austinv11.persistence.internal
 import com.austinv11.persistence.OpCode
 import com.austinv11.persistence.PersistenceManager
 import com.austinv11.persistence.logger
+import com.austinv11.persistence.map
 import org.msgpack.core.MessageBufferPacker
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessageUnpacker
@@ -12,7 +13,8 @@ import java.util.*
 
 private typealias RefArray = java.lang.reflect.Array
 internal val ops = OpCode.values()
-internal const val WRAPPER_KEY = "___I___"
+internal const val WRAPPER_KEY = "p"
+internal const val RESPOND_KEY = "r"
 
 internal fun PersistenceManager.pack(payload: Payload): MessageBuffer {
     val packer = MessagePack.newDefaultBufferPacker()
@@ -31,9 +33,14 @@ internal fun PersistenceManager.pack(payload: Payload): MessageBuffer {
         if (payload.d !is InitializeValueWrapper) {
             packer.insert(payload.d, this)
         } else {
-            packer.packMapHeader(1)
+            packer.packMapHeader(2)
+            packer.insert(RESPOND_KEY, this)
+            packer.insert(payload.d.r, this)
             packer.insert(WRAPPER_KEY, this)
-            packer.insert(payload.d.d, this)
+            packer.packArrayHeader(payload.d.p.size)
+            payload.d.p.forEach { 
+                packer.insert(it!!.map(this), this)
+            }
         }
     }
     
@@ -101,7 +108,7 @@ internal fun PersistenceManager.unpack(bytes: ByteArray): Payload {
             payload = Payload.Kick(t)
         }
         OpCode.INITIALIZE -> {
-            payload = Payload.Initialize(t, InitializeValueWrapper(d!![WRAPPER_KEY] as Array<Any?>))
+            payload = Payload.Initialize(t, InitializeValueWrapper((d!![WRAPPER_KEY] as List<Any?>).toTypedArray(), d[RESPOND_KEY] as Boolean))
         }
         OpCode.CREATION -> {
             payload = Payload.Creation(t, d!!, h!!)
@@ -238,7 +245,8 @@ internal fun MessageBufferPacker.insert(value: Any?, context: PersistenceManager
     }
 }
 
-data class InitializeValueWrapper(val d: Array<Any?>) : HashMap<String, Any?>()
+data class InitializeValueWrapper(val p: Array<Any?>,
+                                  val r: Boolean) : HashMap<String, Any?>()
 
 sealed class Payload(val v: Int? = null, 
                      val t: Long = System.currentTimeMillis(),

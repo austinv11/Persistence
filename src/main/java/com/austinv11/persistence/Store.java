@@ -108,13 +108,11 @@ public interface Store<T> extends Iterable<T>, RandomAccess {
 	 *
 	 * @param originalHash The hash of the original object.
 	 * @param obj The new object.
-	 * @param hint The hint for the changed field. This is a pair where the first value is the property type and the 
-	 * last value is the property name.
 	 * @return The original object, or null if the operation failed.
 	 *
 	 * @throws java.util.NoSuchElementException Thrown when the original hash doesn't correspond to anything stored.
 	 */
-	@Nullable T updateQuietly(long originalHash, @Nonnull T obj, @Nonnull Pair<Class<?>, String> hint) throws NoSuchElementException;
+	@Nullable T updateQuietly(long originalHash, @Nonnull T obj) throws NoSuchElementException;
 	
 	/**
 	 * Gets the amount of elements stored.

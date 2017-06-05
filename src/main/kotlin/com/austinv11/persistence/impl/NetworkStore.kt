@@ -78,12 +78,12 @@ class NetworkStore<T: Any>(private val localStore: Store<T>,
                 it.send(Payload.Change(d = map, h = manager.generateHash(obj), oh = originalHash))
             }
         }
-        return updateQuietly(originalHash, obj, hint)
+        return updateQuietly(originalHash, obj)
     }
 
-    override fun updateQuietly(originalHash: Long, obj: T, hint: Pair<Class<*>, String>): T? {
+    override fun updateQuietly(originalHash: Long, obj: T): T? {
         val obj = obj.unwrapObject()
-        return localStore.update(originalHash, obj, hint)
+        return localStore.updateQuietly(originalHash, obj)
     }
 
     override fun size(): Int {

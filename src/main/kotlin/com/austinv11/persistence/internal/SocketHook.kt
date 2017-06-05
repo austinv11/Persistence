@@ -1,7 +1,10 @@
 package com.austinv11.persistence.internal
 
 import com.austinv11.persistence.ConnectionSpy
+import com.austinv11.persistence.Store
 import com.austinv11.persistence.internal.TwoWaySocket.Hook
+import com.austinv11.persistence.matchProperties
+import kotlinx.coroutines.experimental.runBlocking
 
 internal class SocketHook(override val socket: TwoWaySocket,
                           val spy: ConnectionSpy) : Hook {
@@ -42,7 +45,7 @@ internal class SocketHook(override val socket: TwoWaySocket,
     }
 
     override fun initialize(payload: Payload.Initialize): Boolean {
-        val data = payload.d!![WRAPPER_KEY] as List<Any?>
+        val data = (payload.d as InitializeValueWrapper).p
         val mapped = data.filterNotNull()
                 .map { it as Map<String, Any?> }
                 .map { it to socket.context.findType(it) }
@@ -51,6 +54,11 @@ internal class SocketHook(override val socket: TwoWaySocket,
         val first = mapped.first()
         if (socket.context.store(first.javaClass).containsHash(socket.context.generateHash(first)))
             return false //All this was for nothing :(
+
+        if (payload.d.r)
+            runBlocking {
+                manager.send(Payload.Initialize(d = InitializeValueWrapper(socket.context.stores.values.flatMap { it.collect() }.toTypedArray(), false)))
+            }
         
         mapped.forEach { socket.context.persistQuietly(it) }
         return true
@@ -68,9 +76,14 @@ internal class SocketHook(override val socket: TwoWaySocket,
     }
 
     override fun changed(payload: Payload.Change): Boolean {
-        val store = socket.context.stores.filter { it.value.containsHash(payload.oh!!) }.entries.firstOrNull()?.toPair() ?: return false //All this was for nothing :(
+        val store: Store<in Any> = socket.context.stores.filter { it.value.containsHash(payload.oh!!) }.entries.firstOrNull()?.value as Store<in Any>? ?: return@changed false //All this was for nothing :(
 
-        socket.context.mapValues(payload.d!!, store.first, store.second.get(payload.oh!!))
+        val obj = store.get(payload.oh!!)
+        val pseudoProperty = payload.d!!.iterator().next() //We can assume a single pair
+        val realProperty = socket.context.matchProperties(obj).find { it.name == pseudoProperty.key }!!
+        
+        realProperty.setter.invokeWithArguments(pseudoProperty.value)
+        store.updateQuietly(payload.oh, obj!!)
         return true
     }
 

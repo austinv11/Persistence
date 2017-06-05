@@ -7,6 +7,8 @@ import com.austinv11.persistence.impl.NetworkStore
 import com.austinv11.persistence.impl.NoOpConnectionSpy
 import com.austinv11.persistence.internal.SourceAwareProxy
 import com.austinv11.persistence.internal.TwoWaySocket
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.launch
 import java.io.InvalidClassException
 import java.lang.reflect.Proxy
 import java.util.concurrent.ConcurrentHashMap
@@ -88,6 +90,8 @@ class PersistenceManager {
      * c: Object hashcode; the 4 byte custom object hashcode which should be identical to Persistable#hashCode.
      */
     fun generateHash(obj: Any): Long {
+        val obj = obj.unwrapObject() //Make sure this isn't proxied
+        
         val name = obj::class.simpleName!!
         val nameHash = charArrayOf(name[0], name[Math.floor(name.length / 2.0).toInt()], name[name.length-1])
         val fieldCount = matchProperties(obj).size
@@ -106,6 +110,16 @@ class PersistenceManager {
         hash = shiftAndAdd(hash, ((hashCode shr 8).apply { hashCode = this }).toByte() and mask)
 
         return hash
+    }
+
+    /**
+     * This attempts to connect to the provided node.
+     */
+    @JvmOverloads 
+    fun connectTo(host: String, port: Int, metadata: Map<String, Any?>? = null) {
+        launch(CommonPool) {
+            socket.connectTo(host, port, metadata)
+        }
     }
 
     /**
@@ -219,7 +233,7 @@ class PersistenceManager {
 
     internal fun mapValues(map: Map<String, Any?>, clazz: Class<*>, _instance: Any? = null): Any {
         val instance = _instance ?: clazz.fastInstance()
-        val properties = matchProperties(clazz)
+        val properties = if (_instance == null) matchProperties(clazz) else matchProperties(instance)
         map.mapKeys { val key = it.key; properties.firstOrNull { it.name == key } }
                 .filter { it.key != null }
                 .forEach { k, v -> k!!.setter.let { if (_instance == null) it.bindTo(instance) else it }.invokeWithArguments(v) }

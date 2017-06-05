@@ -40,6 +40,13 @@ class TwoWaySocket {
             yield()
         }
     }
+
+    suspend fun connectTo(host: String, port: Int, metadata: Map<String, Any?>? = null) {
+        val socket = Socket(host, port)
+        val manager = CommunicationManager(socket, SocketHook(this, spy))
+        manager.send(Payload.Identify(context.version, d = metadata))
+        connections += manager
+    }
     
     inner class CommunicationManager(val socket: Socket, 
                                      val hook: Hook,
@@ -52,13 +59,15 @@ class TwoWaySocket {
             hook.hook(this)
             launch(CommonPool) {
                 while (true) {
-                    val lenHeader = input.readBytes(4)
+                    val lenHeader = ByteArray(4)
+                    input.read(lenHeader)
                     var len = 0
                     for (i in 0..(lenHeader.size-1)) {
                         len = len shl 8
-                        len = len and lenHeader[i].toInt()
+                        len = len xor lenHeader[i].toInt()
                     }
-                    val data = input.readBytes(len)
+                    val data = ByteArray(len)
+                    input.read(data)
                     receive(manager.unpack(data))
                 }
             }
@@ -74,7 +83,7 @@ class TwoWaySocket {
             val len3 = len and mask_int
             len = len shr 8
             val len4 = len and mask_int
-            output.write(byteArrayOf(len1.toByte(), len2.toByte(), len3.toByte(), len4.toByte()))
+            output.write(byteArrayOf(len4.toByte(), len3.toByte(), len2.toByte(), len1.toByte()))
             output.write(dataArray)
             output.flush()
         }
@@ -87,6 +96,8 @@ class TwoWaySocket {
                 OpCode.OK -> {
                     if (!hook.verify(payload as Payload.Ok))
                         send(Payload.Rejection())
+                    else
+                        send(Payload.Initialize(d = InitializeValueWrapper(manager.stores.values.flatMap { it.collect() }.toTypedArray(), true)))
                 }
                 OpCode.REJECTION -> {
                     hook.rejected()
@@ -104,8 +115,9 @@ class TwoWaySocket {
                     close()
                 }
                 OpCode.INITIALIZE -> {
-                    if (hook.initialize(payload as Payload.Initialize))
+                    if (hook.initialize(payload as Payload.Initialize)) {
                         connections.filterNot { it == this }.forEach { it.send(payload) }
+                    }
                 }
                 OpCode.CREATION -> {
                     if (hook.created(payload as Payload.Creation))

@@ -48,13 +48,13 @@ class LocalStore<T: Any>(val persistenceManager: PersistenceManager) : Store<T> 
     }
 
     override fun update(originalHash: Long, obj: T, hint: Pair<Class<*>, String>): T? {
-        if (!containsHash(originalHash)) throw NoSuchElementException()
-        
-        return backing.remove(originalHash).also { insert(obj) }
+        return updateQuietly(originalHash, obj)
     }
 
-    override fun updateQuietly(originalHash: Long, obj: T, hint: Pair<Class<*>, String>): T? {
-        return update(originalHash, obj, hint)
+    override fun updateQuietly(originalHash: Long, obj: T): T? {
+        if (!containsHash(originalHash)) throw NoSuchElementException()
+
+        return backing.remove(originalHash).also { insert(obj) }
     }
 
     override fun size(): Int {
