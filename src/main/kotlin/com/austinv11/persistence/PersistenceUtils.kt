@@ -73,8 +73,8 @@ internal fun <T: Any> PersistenceManager.matchProperties(obj: T?, clazz: Class<T
 
     clazz.methods.filter {
         it.isAnnotationPresent(Getter::class.java)
-                || (!explicitPropertiesOnly
-                && Modifier.isPublic(it.modifiers)
+                || (/*!explicitPropertiesOnly
+                && */Modifier.isPublic(it.modifiers)
                 && it.parameterCount == 0
                 && it.name.applyGetterHeuristics() != null)
     }.forEach {
@@ -82,8 +82,8 @@ internal fun <T: Any> PersistenceManager.matchProperties(obj: T?, clazz: Class<T
     }
     clazz.methods.filter {
         it.isAnnotationPresent(Setter::class.java)
-                || (!explicitPropertiesOnly
-                && Modifier.isPublic(it.modifiers)
+                || (/*!explicitPropertiesOnly
+                && */Modifier.isPublic(it.modifiers)
                 && it.parameterCount == 1
                 && !it.isVarArgs
                 && it.name.applySetterHeuristics() != null)

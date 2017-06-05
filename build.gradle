@@ -6,12 +6,14 @@ buildscript {
     ext.kotlin_coroutines_version = '0.15'
     ext.slf4j_version = '1.7.24'
     ext.msgpack_version = '0.8.13'
+    ext.dokka_version = '0.9.14'
 
     repositories {
         jcenter()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:$dokka_version"
     }
 }
 
@@ -19,6 +21,7 @@ apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'idea'
 apply plugin: 'maven'
+apply plugin: 'org.jetbrains.dokka'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -62,4 +65,10 @@ kotlin {
     experimental {
         coroutines "enable"
     }
+}
+
+dokka {
+    outputFormat = 'html'
+    outputDirectory = "$buildDir/javadoc"
+    jdkVersion = 8
 }
