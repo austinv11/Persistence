@@ -1,5 +1,5 @@
 group 'com.austinv11'
-version '1.0-SNAPSHOT'
+version '1.0.0'
 
 buildscript {
     ext.kotlin_version = '1.1.2-2'
@@ -7,6 +7,7 @@ buildscript {
     ext.slf4j_version = '1.7.24'
     ext.msgpack_version = '0.8.13'
     ext.dokka_version = '0.9.14'
+    ext.jsr305_version = '3.0.0'
 
     repositories {
         jcenter()
@@ -33,8 +34,8 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    compile "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:0.15"
-    compile "com.google.code.findbugs:jsr305:3.0.0"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlin_coroutines_version"
+    compile "com.google.code.findbugs:jsr305:$jsr305_version"
     compile "org.slf4j:slf4j-api:$slf4j_version"
     compile "org.msgpack:msgpack-core:$msgpack_version"
     
