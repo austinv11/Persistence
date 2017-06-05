@@ -72,6 +72,7 @@ resolvers += "jitpack.io" at "https://jitpack.io"
 * Persisted objects should be split into an interface and implementation; this is due to a limitation in Java Proxies
 whereby they can only intercept method calls to *interfaces*.
 * When modifying properties, you *must* use the object returned by persist() rather than your original object.
+* It is expected that object implementations properly implement hashCode()
 
 ## The future
 * Provide an annotation processing api in addition to proxies.
