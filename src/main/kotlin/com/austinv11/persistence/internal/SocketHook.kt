@@ -52,7 +52,7 @@ internal class SocketHook(override val socket: TwoWaySocket,
                 .map { socket.context.mapValues(it.first, it.second) }
         
         val first = mapped.first()
-        if (socket.context.store(first.javaClass).containsHash(socket.context.generateHash(first)))
+        if (socket.context.storeFor(first.javaClass).containsHash(socket.context.generateHash(first)))
             return false //All this was for nothing :(
 
         if (payload.d.r)

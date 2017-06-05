@@ -10,8 +10,8 @@ public class SampleMain {
 	public static void main(String[] args) throws InterruptedException {
 		SampleNode node1 = new SampleNode(port1), node2 = new SampleNode(port2); //Setup the nodes
 		
-		Store<SampleObjectImpl> node1Store = node1.getManager().store(SampleObjectImpl.class),
-				node2Store = node2.getManager().store(SampleObjectImpl.class);
+		Store<SampleObjectImpl> node1Store = node1.getManager().storeFor(SampleObjectImpl.class),
+				node2Store = node2.getManager().storeFor(SampleObjectImpl.class);
 		
 		ISampleObject sample1 = node1.getManager().persist(new SampleObjectImpl(randString()));
 		ISampleObject sample2 = node2.getManager().persist(new SampleObjectImpl(randString()));

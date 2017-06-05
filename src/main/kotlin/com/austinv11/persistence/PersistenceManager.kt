@@ -36,15 +36,24 @@ class PersistenceManager {
     /**
      * This gets or generates a [Store] for the provided type.
      *
-     * @param clazz The type to get a store for.
+     * @param clazz The type to get a storeFor for.
      * @return The store.
      */
-    fun <T : Any> store(clazz: Class<T>): Store<T> {
+    fun <T : Any> storeFor(clazz: Class<T>): Store<T> {
         return stores.computeIfAbsent(clazz) { NetworkStore<T>(factory.buildStore(this, clazz), socket) } as Store<T>
     }
 
     /**
-     * This persists an object in the appropriate store.
+     * This gets or generates a [Store] for the provided type.
+     *
+     * @return The store.
+     */
+    inline fun <reified T : Any> storeFor(): Store<T> {
+        return storeFor(T::class.java)
+    }
+
+    /**
+     * This persists an object in the appropriate storeFor.
      * **WARNING:** Only use the object returned by this method and NOT the originally passed in value;
      * they are different!
      * 
@@ -54,14 +63,14 @@ class PersistenceManager {
      * @return The mutable object clone.
      */
     fun <T : Any> persist(obj: T): T {
-        val store = store(obj.javaClass)
+        val store = storeFor(obj.javaClass)
         val wrapped = wrap(obj, store)
         store.insert(wrapped)
         return wrapped
     }
     
     internal fun <T : Any> persistQuietly(obj: T): T {
-        val store = store(obj.javaClass)
+        val store = storeFor(obj.javaClass)
         val wrapped = wrap(obj, store)
         store.insertQuietly(wrapped)
         return wrapped
@@ -226,7 +235,7 @@ class PersistenceManager {
                 likelyCandidates.computeIfAbsent(certainty) { mutableListOf() }.add(k)
         }
 
-        if (likelyCandidates.isEmpty()) throw InvalidClassException("Unable to map object! Maybe a store for it doesn't exist?")
+        if (likelyCandidates.isEmpty()) throw InvalidClassException("Unable to map object! Maybe a storeFor for it doesn't exist?")
 
         return likelyCandidates[likelyCandidates.toSortedMap().lastKey()]!!.first()
     }

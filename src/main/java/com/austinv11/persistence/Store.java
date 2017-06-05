@@ -15,7 +15,7 @@ import java.util.stream.StreamSupport;
 public interface Store<T> extends Iterable<T>, RandomAccess {
 	
 	/**
-	 * Inserts an object into the store.
+	 * Inserts an object into the storeFor.
 	 * 
 	 * @param obj The object to insert.
 	 * @return The object replaced (if there was a hash collision).
@@ -23,7 +23,7 @@ public interface Store<T> extends Iterable<T>, RandomAccess {
 	@Nullable T insert(@Nonnull T obj);
 	
 	/**
-	 * Inserts an object into the store quietly (does not notify peers).
+	 * Inserts an object into the storeFor quietly (does not notify peers).
 	 *
 	 * @param obj The object to insert.
 	 * @return The object replaced (if there was a hash collision).
@@ -122,7 +122,7 @@ public interface Store<T> extends Iterable<T>, RandomAccess {
 	int size();
 	
 	/**
-	 * Gets if this store is empty.
+	 * Gets if this storeFor is empty.
 	 * 
 	 * @return True if empty, false if otherwise.
 	 */
@@ -131,17 +131,17 @@ public interface Store<T> extends Iterable<T>, RandomAccess {
 	}
 	
 	/**
-	 * Clears all objects from the store.
+	 * Clears all objects from the storeFor.
 	 */
 	void clear();
 	
 	/**
-	 * Clears all objects from the store quietly (does not notify peers).
+	 * Clears all objects from the storeFor quietly (does not notify peers).
 	 */
 	void clearQuietly();
 	
 	/**
-	 * Collects the current store into a collection.
+	 * Collects the current storeFor into a collection.
 	 * 
 	 * @return The collection represent the current contents.
 	 */
