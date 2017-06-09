@@ -2,7 +2,7 @@
 Persisting data across multiple clients made easy.
 
 ## The protocol 
-This API implements the peer-to-peer-persistence-protocol v1 (available 
+This API implements the peer-to-peer-persistence-protocol v2 (available 
 [here](https://gist.github.com/austinv11/b91ada1d9f85e9ef3fdeb08952916c47)). This means the nodes this communicates with 
 aren't bound to this particular implementation! 
 
@@ -76,6 +76,5 @@ whereby they can only intercept method calls to *interfaces*.
 
 ## The future
 * Provide an annotation processing api in addition to proxies.
-* Implement authentication and input validation.
-* Migrate from TCP to a more robust protocol. 
-* Compress sent data
+* Implement more robust input validation.
+

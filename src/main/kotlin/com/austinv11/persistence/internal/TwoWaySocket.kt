@@ -1,11 +1,8 @@
 package com.austinv11.persistence.internal
 
-import com.austinv11.persistence.ConnectionSpy
-import com.austinv11.persistence.OpCode
-import com.austinv11.persistence.PersistenceManager
+import com.austinv11.persistence.*
 import com.austinv11.persistence.impl.ConnectionImpl
 import com.austinv11.persistence.impl.NoOpConnectionSpy
-import com.austinv11.persistence.mask_int
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.newSingleThreadContext
@@ -62,34 +59,52 @@ class TwoWaySocket {
         init {
             hook.hook(this)
             launch(CommonPool) {
-                while (true) {
-                    val lenHeader = ByteArray(4)
-                    input.read(lenHeader)
-                    var len = 0
-                    for (i in 0..(lenHeader.size-1)) {
-                        len = len shl 8
-                        len = len xor lenHeader[i].toInt()
+                while (!socket.isClosed) {
+                    try {
+                        val typeHeader = input.read()
+                        if (typeHeader != manager.processor.key.toInt())
+                            throw Exception("PreProcessor mismatch! Expected ${manager.processor.key.toInt()} but received $typeHeader")
+                        
+                        val lenHeader = ByteArray(4)
+                        input.read(lenHeader)
+                        var len = 0
+                        for (i in 0..(lenHeader.size - 1)) {
+                            len = len shl 8
+                            len = len xor (lenHeader[i].toInt() and mask_int)
+                        }
+                        val data = ByteArray(len)
+                        input.read(data)
+                        val processed = manager.processor.consume(host, port, data)
+                        receive(manager.unpack(decompress(processed)))
+                    } catch (e: Exception) {
+                        logger.error("Exception caught processing data, cleanly closing connection to $host:$port...", e)
+                        use {
+                            send(Payload.Kick())
+                        }
                     }
-                    val data = ByteArray(len)
-                    input.read(data)
-                    receive(manager.unpack(data))
                 }
             }
         }
         
         suspend fun send(payload: Payload) {
-            val dataArray = manager.pack(payload).array()
-            var len = dataArray.size
-            val len1 = len and mask_int
-            len = len shr 8
-            val len2 = len and mask_int
-            len = len shr 8
-            val len3 = len and mask_int
-            len = len shr 8
-            val len4 = len and mask_int
-            output.write(byteArrayOf(len4.toByte(), len3.toByte(), len2.toByte(), len1.toByte()))
-            output.write(dataArray)
-            output.flush()
+            try {
+                val dataArray = manager.processor.pack(host, port, compress(manager.pack(payload)))
+                var len = dataArray.size
+                val len1 = len and mask_int
+                len = len shr 8
+                val len2 = len and mask_int
+                len = len shr 8
+                val len3 = len and mask_int
+                len = len shr 8
+                val len4 = len and mask_int
+                output.write(manager.processor.key.toInt())
+                output.write(byteArrayOf(len4.toByte(), len3.toByte(), len2.toByte(), len1.toByte()))
+                output.write(dataArray)
+                output.flush()
+            } catch (e: Exception) {
+                logger.error("Exception caught sending data, harshly closing connection to $host:$port...", e)
+                close()
+            }
         }
         
         suspend fun receive(payload: Payload) {

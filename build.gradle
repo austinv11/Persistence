@@ -1,5 +1,5 @@
 group 'com.austinv11'
-version '1.0.0'
+version '1.1.0'
 
 buildscript {
     ext.kotlin_version = '1.1.2-2'
@@ -8,6 +8,7 @@ buildscript {
     ext.msgpack_version = '0.8.13'
     ext.dokka_version = '0.9.14'
     ext.jsr305_version = '3.0.0'
+    ext.commons_compression_version = '1.14'
 
     repositories {
         jcenter()
@@ -35,9 +36,10 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlin_coroutines_version"
-    compile "com.google.code.findbugs:jsr305:$jsr305_version"
+    compileOnly "com.google.code.findbugs:jsr305:$jsr305_version"
     compile "org.slf4j:slf4j-api:$slf4j_version"
     compile "org.msgpack:msgpack-core:$msgpack_version"
+    compile "org.apache.commons:commons-compress:$commons_compression_version"//TODO replace with https://github.com/lz4/lz4-java when its updated
     
     testCompile "org.slf4j:slf4j-simple:$slf4j_version"
     testCompile group: 'junit', name: 'junit', version: '4.12'

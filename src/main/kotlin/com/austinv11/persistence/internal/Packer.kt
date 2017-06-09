@@ -4,11 +4,13 @@ import com.austinv11.persistence.OpCode
 import com.austinv11.persistence.PersistenceManager
 import com.austinv11.persistence.logger
 import com.austinv11.persistence.map
+import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorInputStream
+import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorOutputStream
 import org.msgpack.core.MessageBufferPacker
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessageUnpacker
-import org.msgpack.core.buffer.MessageBuffer
 import org.msgpack.value.ValueType
+import java.io.ByteArrayOutputStream
 import java.util.*
 
 private typealias RefArray = java.lang.reflect.Array
@@ -16,7 +18,22 @@ internal val ops = OpCode.values()
 internal const val WRAPPER_KEY = "p"
 internal const val RESPOND_KEY = "r"
 
-internal fun PersistenceManager.pack(payload: Payload): MessageBuffer {
+internal fun compress(bytes: ByteArray): ByteArray {
+    val byteStream = ByteArrayOutputStream()
+    val outStream = FramedLZ4CompressorOutputStream(byteStream)
+    outStream.write(bytes)
+    outStream.close()
+    return byteStream.toByteArray()
+}
+
+internal fun decompress(bytes: ByteArray): ByteArray {
+    val inStream = FramedLZ4CompressorInputStream(bytes.inputStream())
+    val readBytes = inStream.readBytes()
+    inStream.close()
+    return readBytes
+}
+
+internal fun PersistenceManager.pack(payload: Payload): ByteArray {
     val packer = MessagePack.newDefaultBufferPacker()
     
     val payloadMap = payload.toMap()
@@ -45,7 +62,7 @@ internal fun PersistenceManager.pack(payload: Payload): MessageBuffer {
     }
     
     packer.flush()
-    return packer.toMessageBuffer().also { packer.close() }
+    return packer.toMessageBuffer().also { packer.close() }.array()
 }
 
 internal fun PersistenceManager.unpack(bytes: ByteArray): Payload {

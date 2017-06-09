@@ -1,4 +1,5 @@
 import com.austinv11.persistence.Store;
+import com.austinv11.persistence.impl.EncryptedPreProcessor;
 
 import java.math.BigInteger;
 import java.util.concurrent.ThreadLocalRandom;
@@ -12,6 +13,10 @@ public class SampleMain {
 		
 		Store<SampleObjectImpl> node1Store = node1.getManager().storeFor(SampleObjectImpl.class),
 				node2Store = node2.getManager().storeFor(SampleObjectImpl.class);
+		
+		//Enables end-to-end encryption using the passkey "password"
+		node1.getManager().setPreProcessor(new EncryptedPreProcessor("password"));
+		node2.getManager().setPreProcessor(new EncryptedPreProcessor("password"));
 		
 		ISampleObject sample1 = node1.getManager().persist(new SampleObjectImpl(randString()));
 		ISampleObject sample2 = node2.getManager().persist(new SampleObjectImpl(randString()));

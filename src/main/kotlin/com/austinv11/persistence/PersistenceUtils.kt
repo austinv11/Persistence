@@ -14,7 +14,7 @@ import kotlin.experimental.and
 /**
  * This is the version of PPPP this version of the api is using.
  */
-const val PPPP_VERSION = 1
+const val PPPP_VERSION = 2
 
 internal val logger = LoggerFactory.getLogger("Persistence")
 

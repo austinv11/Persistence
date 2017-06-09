@@ -5,6 +5,7 @@ package com.austinv11.persistence
 import com.austinv11.persistence.impl.DefaultFactory
 import com.austinv11.persistence.impl.NetworkStore
 import com.austinv11.persistence.impl.NoOpConnectionSpy
+import com.austinv11.persistence.impl.NoOpPreProcessor
 import com.austinv11.persistence.internal.SourceAwareProxy
 import com.austinv11.persistence.internal.TwoWaySocket
 import kotlinx.coroutines.experimental.CommonPool
@@ -29,6 +30,7 @@ class PersistenceManager {
     @Volatile internal var port = 6000
     @Volatile internal var allowedConnections = 2
     @Volatile internal var spy: ConnectionSpy = NoOpConnectionSpy()
+    @Volatile internal var processor: PreProcessor = NoOpPreProcessor()
     internal val socket: TwoWaySocket by lazy { 
         TwoWaySocket(this@PersistenceManager, port, allowedConnections, spy)
     }  
@@ -194,6 +196,17 @@ class PersistenceManager {
      */
     fun setConnectionSpy(spy: ConnectionSpy): PersistenceManager {
         this.spy = spy
+        return this
+    }
+
+    /**
+     * This sets the pre processor for data. By default this uses a No-Op implementation.
+     * 
+     * @see NoOpPreProcessor
+     * @see EncryptedPreProcessor
+     */
+    fun setPreProcessor(processor: PreProcessor) : PersistenceManager {
+        this.processor = processor
         return this
     }
 
